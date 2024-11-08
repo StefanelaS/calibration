@@ -86,7 +86,7 @@ def weighted_LR(df, data):
 def get_final_df(df, model):
     
     c = ( df['C'] - model.intercept_) / model.coef_[0]
-    accuracy = (c / df['C']).replace([float('inf'), -float('inf')], None) * 100
+    accuracy = (c / df['Ratio']).replace([float('inf'), -float('inf')], None) * 100
     
     new_df = pd.DataFrame({
         'Sample': df['Sample'],
