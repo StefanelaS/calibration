@@ -18,11 +18,9 @@ from sklearn.metrics import mean_squared_error, r2_score
 def load_excel(file):
     df = pd.read_excel(file)
     df.columns = ['Sample', 'Ratio', 'C']
-    differences = []
-    for i in range(0, len(df)):
-        diff = df.iloc[i]["Ratio"] - df.iloc[0]["Ratio"] 
-        differences.append(diff)
-    df['Diff'] = differences
+    reference_ratio = (df.iloc[0]["Ratio"] + df.iloc[1]["Ratio"]) / 2
+    # Compute the difference of each "Ratio" from the reference_ratio
+    df['Diff'] = df['Ratio'] - reference_ratio
     return df
 
 def get_mean_df(df):
@@ -74,7 +72,7 @@ def weighted_LR(df, data):
     
     # Create a figures
     fig, ax = plt.subplots()
-    ax.scatter(df[['C']][2:], df[['Ratio']][2:], color='blue', label='Data')
+    ax.scatter(df[['C']][2:], df[['Diff']][2:], color='blue', label='Data')
     ax.plot(X, pred, color='red', label='Regression Line')
     ax.set_xlabel('C')
     ax.set_ylabel('Ratio')
@@ -93,8 +91,9 @@ def get_final_df(df, model):
     
     new_df = pd.DataFrame({
         'Sample': df['Sample'],
-        'Ratio': df['Ratio'],
+        'Real Ratio': df['Ratio'],
         'Real C': df['C'],
+        'Shifted Ratio': df['Diff'],
         'Calculated C': c,
         'Accuracy (%)': accuracy})
     
