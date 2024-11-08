@@ -18,6 +18,11 @@ from sklearn.metrics import mean_squared_error, r2_score
 def load_excel(file):
     df = pd.read_excel(file)
     df.columns = ['Sample', 'Ratio', 'C']
+    differences = []
+    for i in range(0, len(data)):
+        diff = df.iloc[i]["Ratio"] - df.iloc[0]["Ratio"] 
+        differences.append(diff)
+    df['Diff'] = differences
     return df
 
 def get_mean_df(df):
@@ -66,12 +71,10 @@ def weighted_LR(df, data):
     pred = model.predict(X)
     mse = mean_squared_error(y, pred)
     r2 = r2_score(y, pred)
-    plt.scatter(df[['C']][2:], df[['Ratio']][2:], color='blue', label='Data')
-    plt.plot(X, pred , color='red', label='Regression Line')
     
     # Create a figures
     fig, ax = plt.subplots()
-    ax.scatter(X, y, color='blue', label='Data')
+    ax.scatter(df[['C']][2:], df[['Ratio']][2:], color='blue', label='Data')
     ax.plot(X, pred, color='red', label='Regression Line')
     ax.set_xlabel('C')
     ax.set_ylabel('Ratio')
@@ -85,7 +88,7 @@ def weighted_LR(df, data):
 
 def get_final_df(df, model):
     
-    c = ( df['Ratio'] - model.intercept_) / model.coef_[0]
+    c = (df['Diff'] - model.intercept_) / model.coef_[0]
     accuracy = (c / df['C']).replace([float('inf'), -float('inf')], None) * 100
     
     new_df = pd.DataFrame({
