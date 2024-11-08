@@ -56,17 +56,17 @@ def get_mean_df(df):
     return data
 
 
-def weighted_LR(df):
-    df['Weight'] = np.where(df['C'] != 0, 1 / (df['C']), 0)
-    X  = df[['C']][1:]
-    y = df['Ratio'][1:]
+def weighted_LR(df, data):
+    data['Weight'] = np.where(data['C'] != 0, 1 / (data['C']), 0)
+    X  = data[['C']][1:]
+    y = data['Ratio'][1:]
     model = LinearRegression()
-    model.fit(X, y, sample_weight=df['Weight'][1:])
+    model.fit(X, y, sample_weight=data['Weight'][1:])
     #print(model.coef_[0], model.intercept_)
     pred = model.predict(X)
     mse = mean_squared_error(y, pred)
     r2 = r2_score(y, pred)
-    plt.scatter(X, y, color='blue', label='Data')
+    plt.scatter(df[['C']][2:], df[['Ratio']][2:], color='blue', label='Data')
     plt.plot(X, pred , color='red', label='Regression Line')
     
     # Create a figures
@@ -77,14 +77,26 @@ def weighted_LR(df):
     ax.set_ylabel('Ratio')
     ax.text(0.40, 0.15, f"Ratio = {model.coef_[0]:.8f} * C + {model.intercept_:.8f}", transform=plt.gca().transAxes, fontsize=10)
     ax.text(0.70, 0.30, f"R² = {r2:.4f}", transform=plt.gca().transAxes, fontsize=10)
-    ax.text(0.70, 0.25, f"MSE = {mse:.4f}", transform=plt.gca().transAxes, fontsize=10)
+    #ax.text(0.70, 0.25, f"MSE = {mse:.4f}", transform=plt.gca().transAxes, fontsize=10)
     ax.legend()
     
-    return fig
+    return fig, model
 
-df = load_excel("Calibration.xlsx")
-data = get_mean_df(df)
-fig = weighted_LR(data)
+
+def get_final_df(df, model):
+    
+    c = ( df['C'] - model.intercept_) / model.coef_[0]
+    accuracy = (c / df['C']).replace([float('inf'), -float('inf')], None) * 100
+    
+    new_df = pd.DataFrame({
+        'Sample': df['Sample'],
+        'Ratio': df['Ratio'],
+        'Real C': df['C'],
+        'Calculated C': c,
+        'Accuracy (%)': accuracy})
+    
+    return new_df
+    
 
 names = {
     "Tryptophan": {"beta": 0.001115585071256631, "alpha": 1.0257405790000629}
@@ -100,11 +112,13 @@ if option == "Perform Calibration":
         # Process and display data
         df = load_excel(uploaded_file)
         data = get_mean_df(df)
-        st.write("Processed Data:")
-        st.dataframe(data)
-        
+    
         # Perform weighted linear regression and plot
-        fig = weighted_LR(data)
+        fig, model = weighted_LR(df, data)
+        
+        st.write("Processed Data:")
+        new_df = get_final_df(df, model)
+        st.dataframe(new_df)
         st.pyplot(fig)
         
 elif option == "Get Concentration from Ratio":
