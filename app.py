@@ -19,7 +19,7 @@ def load_excel(file):
     df = pd.read_excel(file)
     df.columns = ['Sample', 'Ratio', 'C']
     differences = []
-    for i in range(0, len(data)):
+    for i in range(0, len(df)):
         diff = df.iloc[i]["Ratio"] - df.iloc[0]["Ratio"] 
         differences.append(diff)
     df['Diff'] = differences
