@@ -109,7 +109,7 @@ option = st.radio("Choose an option:", ("Perform Calibration", "Get Concentratio
 
 if option == "Perform Calibration":
     # Prompt for file upload only for calibration
-    uploaded_file = st.file_uploader("Choose an XLSX file", type="xlsx")
+    uploaded_file = st.file_uploader("Choose an XLSX file with 3 columns in order: sample name, ratio, concentration", type="xlsx")
     if uploaded_file is not None:
         # Process and display data
         df = load_excel(uploaded_file)
@@ -126,7 +126,7 @@ if option == "Perform Calibration":
 elif option == "Get Concentration from Ratio":
     # For concentration estimation, prompt for ratio input directly
     compound_name = st.selectbox("Select the compound:", list(names.keys()))
-    uploaded_file = st.file_uploader("Choose an XLSX file with 2 columns in order: sample name, ratio)", type="xlsx")
+    uploaded_file = st.file_uploader("Choose an XLSX file with 2 columns in order: sample name, ratio", type="xlsx")
     
     if uploaded_file and compound_name:
         # Retrieve the model parameters for the selected compound
