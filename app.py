@@ -126,13 +126,23 @@ if option == "Perform Calibration":
 elif option == "Get Concentration from Ratio":
     # For concentration estimation, prompt for ratio input directly
     compound_name = st.selectbox("Select the compound:", list(names.keys()))
-    input_ratio = st.number_input("Enter a ratio value:")
+    uploaded_file = st.file_uploader("Choose an XLSX file with 2 columns in order: sample name, ratio)", type="xlsx")
     
-    if input_ratio and compound_name:
+    if uploaded_file and compound_name:
         # Retrieve the model parameters for the selected compound
         coef = names[compound_name]["beta"]
         intercept = names[compound_name]["alpha"]
         
         # Calculate the concentration
-        C = (input_ratio - intercept) / coef
-        st.write(f"Estimated concentration: {C:.6f}")
+        df = pd.read_excel(uploaded_file)
+        
+        if df.shape[1] == 2:
+            df.columns = ["Sample Name", "Ratio"]
+            
+            # Calculate the concentration for each ratio in the DataFrame
+            df["Concentration"] = (df["Ratio"] - intercept) / coef
+            
+            # Display the new table with sample name, ratio, and calculated concentration
+            st.write(df)
+        else:
+            st.error("The uploaded file should contain exactly 2 columns: sample name and ratio!")
