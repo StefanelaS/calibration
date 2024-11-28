@@ -159,6 +159,6 @@ if st.session_state.coeffs:
     beta = st.session_state.coeffs.get("beta", 0)
     alpha = st.session_state.coeffs.get("alpha", 0)
     st.sidebar.write("Equation:")
-    st.sidebar.latex(rf"Concentration = \frac{{Ratio - {alpha}}}{{{beta}}}")
+    st.sidebar.latex(rf"C = \frac{{Ratio - {alpha}}}{{{beta}}}")
 else:
     st.sidebar.write("No coefficients saved yet.")
