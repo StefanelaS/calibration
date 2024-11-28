@@ -100,9 +100,8 @@ def get_final_df(df, model):
     return new_df
     
 
-names = {
-    "Tryptophan": {"beta": 0.001115585071256631, "alpha": 1.0257405790000629}
-}
+# Initilize dict for storing coefficients
+coeffs = {}
 
 st.title("Calibration")
 option = st.radio("Choose an option:", ("Perform Calibration", "Get Concentration from Ratio"))
@@ -123,26 +122,41 @@ if option == "Perform Calibration":
         st.dataframe(new_df)
         st.pyplot(fig)
         
+        # Allow user to save new coefficients
+        if st.button("Save Coefficients"):
+            coeffs["beta"] = model.coef_[0]
+            coeffs["alpha"] = model.intercept_
+            coeffs["source_file"] = uploaded_file.name  # Save the name of the uploaded calibration file
+            st.success(f"Coefficients calculated from file: {uploaded_file.name} are successfully saved.")
+        
 elif option == "Get Concentration from Ratio":
-    # For concentration estimation, prompt for ratio input directly
-    compound_name = st.selectbox("Select the compound:", list(names.keys()))
-    uploaded_file = st.file_uploader("Choose an XLSX file with 2 columns in order: sample name, ratio", type="xlsx")
+    if not coeffs:
+        st.error("No coefficients found! Please perform calibration first.")
+    else:
+        uploaded_file = st.file_uploader("Choose an XLSX file with 2 columns in order: sample name, ratio", type="xlsx")
+        
+        if uploaded_file:
+            coef = coeffs["beta"]
+            intercept = coeffs["alpha"]
+            
+            df = pd.read_excel(uploaded_file)
+            
+            if df.shape[1] == 2:
+                df.columns = ["Sample Name", "Ratio"]
+                df["Concentration"] = (df["Ratio"] - intercept) / coef
+                st.write(df)
+            else:
+                st.error("The uploaded file should contain exactly 2 columns: sample name and ratio!")
+
+
+st.sidebar.write("### Current Calibration Details")
+if coeffs:
+    st.sidebar.write(f"Source File: {coeffs.get('source_file', 'Unknown')}")
     
-    if uploaded_file and compound_name:
-        # Retrieve the model parameters for the selected compound
-        coef = names[compound_name]["beta"]
-        intercept = names[compound_name]["alpha"]
-        
-        # Calculate the concentration
-        df = pd.read_excel(uploaded_file)
-        
-        if df.shape[1] == 2:
-            df.columns = ["Sample Name", "Ratio"]
-            
-            # Calculate the concentration for each ratio in the DataFrame
-            df["Concentration"] = (df["Ratio"] - intercept) / coef
-            
-            # Display the new table with sample name, ratio, and calculated concentration
-            st.write(df)
-        else:
-            st.error("The uploaded file should contain exactly 2 columns: sample name and ratio!")
+    # Display the formula
+    beta = coeffs.get("beta", 0)
+    alpha = coeffs.get("alpha", 0)
+    st.sidebar.write("Equation:")
+    st.sidebar.latex(rf"Concentration = \frac{{Ratio - {alpha}}}{{{beta}}}")
+else:
+    st.sidebar.write("No coefficients saved yet.")
