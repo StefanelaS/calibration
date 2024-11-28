@@ -102,6 +102,8 @@ def get_final_df(df, model):
 
 # Initilize dict for storing coefficients
 coeffs = {}
+if "coeffs" not in st.session_state:
+    st.session_state.coeffs = {}
 
 st.title("Calibration")
 option = st.radio("Choose an option:", ("Perform Calibration", "Get Concentration from Ratio"))
@@ -124,20 +126,20 @@ if option == "Perform Calibration":
         
         # Allow user to save new coefficients
         if st.button("Save Coefficients"):
-            coeffs["beta"] = model.coef_[0]
-            coeffs["alpha"] = model.intercept_
-            coeffs["source_file"] = uploaded_file.name  # Save the name of the uploaded calibration file
+            st.session_state.coeffs["beta"] = model.coef_[0]
+            st.session_state.coeffs["alpha"] = model.intercept_
+            st.session_state.coeffs["source_file"] = uploaded_file.name  # Save the name of the uploaded calibration file
             st.success(f"Coefficients calculated from file: {uploaded_file.name} are successfully saved.")
         
 elif option == "Get Concentration from Ratio":
-    if not coeffs:
+    if not st.session_state.coeffs:
         st.error("No coefficients found! Please perform calibration first.")
     else:
         uploaded_file = st.file_uploader("Choose an XLSX file with 2 columns in order: sample name, ratio", type="xlsx")
         
         if uploaded_file:
-            coef = coeffs["beta"]
-            intercept = coeffs["alpha"]
+            coef = st.session_state.coeffs["beta"]
+            intercept = st.session_state.coeffs["alpha"]
             
             df = pd.read_excel(uploaded_file)
             
@@ -150,12 +152,12 @@ elif option == "Get Concentration from Ratio":
 
 
 st.sidebar.write("### Current Calibration Details")
-if coeffs:
-    st.sidebar.write(f"Source File: {coeffs.get('source_file', 'Unknown')}")
+if st.session_state.coeffs:
+    st.sidebar.write(f"Source File: {st.session_state.coeffs.get('source_file', 'Unknown')}")
     
     # Display the formula
-    beta = coeffs.get("beta", 0)
-    alpha = coeffs.get("alpha", 0)
+    beta = st.session_state.coeffs.get("beta", 0)
+    alpha = st.session_state.coeffs.get("alpha", 0)
     st.sidebar.write("Equation:")
     st.sidebar.latex(rf"Concentration = \frac{{Ratio - {alpha}}}{{{beta}}}")
 else:
