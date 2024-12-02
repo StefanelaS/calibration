@@ -28,7 +28,7 @@ def load_excel(file):
     df['Diff'] = df['Ratio'] - reference_ratio
     return df
 
-def get_mean_df(df):
+def get__df(df):
     # Group by concentration ('C') to handle any number of measurements per concentration
     grouped = df.groupby('C').agg(
         ratio_means=('Ratio', 'mean'),  # Mean of Ratio for all measurements at this concentration
@@ -45,42 +45,6 @@ def get_mean_df(df):
         'C': grouped['concentrations']
         })
     
-    return data
-
-
-def get_grouped_df(df):
-    # find mean between the 2 points
-    ratio_means = []
-    samples = []
-    concentrations = []
-
-    for i in range(0, len(df) - 1, 2):
-        sample_name = f"S{i // 2}"
-    
-        # Calculate the mean only for the "Ratio" column
-        mean_ratio = df.iloc[i:i+2]["Ratio"].astype(float).mean() 
-        concentration = df.iloc[i]["C"]  
-    
-        # Append values to lists
-        samples.append(sample_name)
-        ratio_means.append(mean_ratio)
-        concentrations.append(concentration)
-
-    # create new df with new values
-    data = pd.DataFrame({
-        'Sample': samples,
-        'ratio': ratio_means,
-        'C': concentrations
-        })
-
-    # compute ratio difference
-    differences = []
-    for i in range(0, len(data)):
-        diff = data.iloc[i]["ratio"] - data.iloc[0]["ratio"] 
-        differences.append(diff)
-    
-    data['Ratio'] = differences
-    data = data.drop(['ratio'], axis = 1)
     return data
 
 
