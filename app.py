@@ -28,7 +28,7 @@ def load_excel(file):
     df['Diff'] = df['Ratio'] - reference_ratio
     return df
 
-def get__df(df):
+def get_mean_df(df):
     # Group by concentration ('C') to handle any number of measurements per concentration
     grouped = df.groupby('C').agg(
         ratio_means=('Ratio', 'mean'),  # Mean of Ratio for all measurements at this concentration
