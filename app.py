@@ -49,6 +49,11 @@ def get_mean_df(df):
 
 
 def weighted_LR(df, data):
+    
+    # Find how many measurements correspond to the first reference concentration
+    first_concentration = df['C'].iloc[0]
+    reference_count = (df['C'] == first_concentration).sum()
+    
     data['Weight'] = np.where(data['C'] != 0, 1 / (data['C']), 0)
     X  = data[['C']][1:]
     y = data['Ratio'][1:]
@@ -61,7 +66,7 @@ def weighted_LR(df, data):
     
     # Create a figures
     fig, ax = plt.subplots()
-    ax.scatter(df[['C']][2:], df[['Diff']][2:], color='blue', label='Data')
+    ax.scatter(df[['C']][reference_count:], df[['Diff']][reference_count:], color='blue', label='Data')
     ax.plot(X, pred, color='red', label='Regression Line')
     ax.set_xlabel('C')
     ax.set_ylabel('Ratio')
