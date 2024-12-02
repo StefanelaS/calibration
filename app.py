@@ -18,12 +18,37 @@ from sklearn.metrics import mean_squared_error, r2_score
 def load_excel(file):
     df = pd.read_excel(file)
     df.columns = ['Sample', 'Ratio', 'C']
-    reference_ratio = (df.iloc[0]["Ratio"] + df.iloc[1]["Ratio"]) / 2
+    
+    # Compute the reference ratio dynamically based on all available measurements for the first concentration
+    first_concentration = df['C'].iloc[0]
+    reference_data = df[df['C'] == first_concentration]
+    reference_ratio = reference_data['Ratio'].mean()
+    
     # Compute the difference of each "Ratio" from the reference_ratio
     df['Diff'] = df['Ratio'] - reference_ratio
     return df
 
 def get_mean_df(df):
+    # Group by concentration ('C') to handle any number of measurements per concentration
+    grouped = df.groupby('C').agg(
+        ratio_means=('Ratio', 'mean'),  # Mean of Ratio for all measurements at this concentration
+        concentrations=('C', 'first')  # Retain the concentration value
+    ).reset_index(drop=True)
+    
+    samples = [f"S{i}" for i in range(len(grouped))]
+    differences = grouped['ratio_means'] - grouped['ratio_means'].iloc[0]
+    
+    # create new df with new values
+    data = pd.DataFrame({
+        'Sample': samples,
+        'Ratio': differences,
+        'C': grouped['concentrations']
+        })
+    
+    return data
+
+
+def get_grouped_df(df):
     # find mean between the 2 points
     ratio_means = []
     samples = []
